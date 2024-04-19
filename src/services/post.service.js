@@ -1,9 +1,10 @@
 const Post = require('../models/posts.model');
-const { ResourceNotFound, Unauthorized } = require('../middlewares/error');
+const { ResourceNotFound, Forbidden } = require('../middlewares/error');
 
 const getPostById = async (id) => {
   const post = await Post.findOne({ _id: id }).populate('user');
-  return post;
+  if (post) return post;
+  throw new ResourceNotFound('Post not found');
 };
 
 const getAllPosts = async (page, limit, order, orderBy) => {
@@ -32,8 +33,7 @@ const updatePost = async (userId, postId, payload) => {
     { new: true }
   ).populate('user');
 
-  if (!post)
-    throw new Unauthorized('You are not authorized to update this post');
+  if (!post) throw new Forbidden('You are not authorized to update this post');
   return post;
 };
 
@@ -45,7 +45,7 @@ const deletePost = async (userId, postId) => {
     _id: postId,
     user: userId,
   }).populate('user');
-  if (!post) throw new ResourceNotFound('Not authorized to delete post');
+  if (!post) throw new Forbidden('You are not authorized to delete this post');
 
   return post;
 };
